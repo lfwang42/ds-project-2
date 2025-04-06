@@ -74,6 +74,9 @@ class MultilabelOversampler:
         
         print("Start the upsampling process.")
         for iter_ in tqdm(range(self.number_of_adds),desc="Iteration", disable=self.tqdm_disable):
+            # print(self.target_list)
+            # print(type(self.target_list))
+            # print(type(df_new))
             current_std = df_new[self.target_list].sum().std()
 
             # Take random row and add to df_new
