@@ -11,7 +11,8 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import SVC, LinearSVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.ensemble import RandomForestClassifier
+import sklearn.utils
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import roc_auc_score, accuracy_score, roc_curve, confusion_matrix, \
 multilabel_confusion_matrix, classification_report
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
@@ -64,7 +65,7 @@ res = []
 
 
 mo.seed_everything(42)
-ml_oversampler = mo.MultilabelOversampler(number_of_adds=2000, number_of_tries=2000)
+ml_oversampler = mo.MultilabelOversampler(number_of_adds=1500, number_of_tries=1500)
 # new_data = ml_oversampler.fit(data, target_list=label_names)
 
 
@@ -85,7 +86,7 @@ ml_oversampler = mo.MultilabelOversampler(number_of_adds=2000, number_of_tries=2
 # X_train, X_test, y_train, y_test = train_test_split(
 #     texts, labels, test_size=0.15, random_state=42)
 
-train, test = train_test_split(data, test_size=0.15, random_state=42)
+train, test = train_test_split(data, test_size=0.2, random_state=42)
 
 
 X_test = list(test['Text'].values)
@@ -95,8 +96,8 @@ y_test = list(test[test.columns[1:8]].apply(lambda row: row.dropna().tolist(), a
 
 #oversample training dataset
 new_train = ml_oversampler.fit(train, target_list=label_names)
-ml_oversampler.plot_all_tries()
-ml_oversampler.plot_results()
+# ml_oversampler.plot_all_tries()
+# ml_oversampler.plot_results()
 
 X_train = list(new_train['Text'].values)
 
@@ -161,11 +162,19 @@ RF_pipeline = Pipeline([('tfidf', TfidfVectorizer(stop_words='english')),
 
 ML_pipeline = Pipeline([('tfidf', TfidfVectorizer(stop_words='english')),
                         # ('SMOTE', SMOTE(random_state=42)),
-                       ('rf_model', MLPClassifier(random_state=42, 
+                       ('ml_model', MLPClassifier(random_state=42, 
                                                     # class_weight='balanced_subsample', 
                                                     verbose=True,
                                                     max_iter=35
                                                                            ))])
+
+GBM_pipeline = Pipeline([('tfidf', TfidfVectorizer(stop_words='english')),
+                        # ('SMOTE', SMOTE(random_state=42)),
+                       ('gbm_model', OneVsRestClassifier(GradientBoostingClassifier(random_state=42, verbose=True), n_jobs=-1) 
+                                                    # class_weight='balanced_subsample', 
+                                                    # verbose=True,
+                                                    # max_iter=35
+                                                                           )])
 
 
 def run_pipeline(pipeline, train_feats, train_lbls, test_feats, test_lbls, roc):
@@ -196,7 +205,12 @@ print('LOGISTIC REGRESSION: ')
 run_pipeline(LR_pipeline, X_train, y_train, X_test, y_test, True)
 print('SVM: ')
 run_SVM_pipeline(SVM_pipeline, X_train, y_train, X_test, y_test)
-print('Random Forest: ')
-run_pipeline(RF_pipeline, X_train, y_train, X_test, y_test, False)
-print('ML: ')
-run_pipeline(ML_pipeline, X_train, y_train, X_test, y_test, True)
+# print('Random Forest: ')
+# run_pipeline(RF_pipeline, X_train, y_train, X_test, y_test, False)
+# print('ML: ')
+# run_pipeline(ML_pipeline, X_train, y_train, X_test, y_test, True)
+# print('GBM: ')
+# run_pipeline(GBM_pipeline, X_train, y_train, X_test, y_test, True)
+
+
+# print(sklearn.utils.check_random_state(None))
